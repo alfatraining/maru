@@ -1,5 +1,5 @@
 # Stage 1: Build
-FROM golang:1.18.9-alpine3.17 AS builder
+FROM golang:1.19-alpine3.17 AS builder
 
 # Install build tools
 RUN apk add --update --no-cache ca-certificates git make openssh
