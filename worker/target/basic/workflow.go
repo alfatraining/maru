@@ -39,22 +39,27 @@ type workflowRequest struct {
 
 const taskQueue = "temporal-basic-act"
 
+const defaultActivityDurationMilliseconds = 100
+
 // Workflow implements a basic bench scenario to schedule activities in sequence.
 func Workflow(ctx workflow.Context, request workflowRequest) (string, error) {
 
 	logger := workflow.GetLogger(ctx)
 
-	logger.Info("basic workflow started", "activity task queue", taskQueue)
+	logger.Debug("basic workflow started", "activity task queue", taskQueue)
 
 	ao := workflow.ActivityOptions{
 		TaskQueue:           taskQueue,
-		StartToCloseTimeout: time.Duration(request.ActivityDurationMilliseconds)*time.Millisecond + 10 * time.Minute,
+		StartToCloseTimeout: time.Duration(request.ActivityDurationMilliseconds)*time.Millisecond + 10*time.Minute,
 	}
 	ctx = workflow.WithActivityOptions(ctx, ao)
 
 	parallelCount := 1
 	if request.ParallelCount > 1 {
 		parallelCount = request.ParallelCount
+	}
+	if request.ActivityDurationMilliseconds == 0 {
+		request.ActivityDurationMilliseconds = defaultActivityDurationMilliseconds
 	}
 
 	for i := 0; i < request.SequenceCount; i++ {
@@ -79,9 +84,9 @@ func Workflow(ctx workflow.Context, request workflowRequest) (string, error) {
 			allResults[i] = result
 		}
 
-		logger.Info("activity returned result to the workflow", "value", allResults)
+		logger.Debug("activity returned result to the workflow", "value", allResults)
 	}
 
-	logger.Info("basic workflow completed")
+	logger.Debug("basic workflow completed")
 	return request.ResultPayload, nil
 }
