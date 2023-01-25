@@ -267,19 +267,12 @@ func constructBasicActWorker(ctx context.Context, serviceClient client.Client, l
 }
 
 func buildWorkerOptions(ctx context.Context, logger *zap.Logger) worker.Options {
-	numDecisionPollers := getEnvOrDefaultInt(logger, "NUM_DECISION_POLLERS", 50)
-	logger.Info("Using env config for NUM_DECISION_POLLERS", zap.Int("NUM_DECISION_POLLERS", numDecisionPollers))
-
-	workerOptions := worker.Options{
+	return worker.Options{
 		BackgroundActivityContext:               ctx,
-		MaxConcurrentWorkflowTaskPollers:        numDecisionPollers,
-		MaxConcurrentActivityTaskPollers:        8 * numDecisionPollers,
 		MaxConcurrentWorkflowTaskExecutionSize:  256,
 		MaxConcurrentLocalActivityExecutionSize: 256,
 		MaxConcurrentActivityExecutionSize:      256,
 	}
-
-	return workerOptions
 }
 
 func getTLSConfig(hostPort string, logger *zap.Logger) (*tls.Config, error) {
