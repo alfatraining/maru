@@ -283,6 +283,10 @@ func buildWorkerOptions(ctx context.Context, logger *zap.Logger) worker.Options 
 }
 
 func getTLSConfig(hostPort string, logger *zap.Logger) (*tls.Config, error) {
+	if i := strings.Index(hostPort, ":///"); i > 0 {
+		// remove everything from the beginning of the string until and including `:///``
+		hostPort = hostPort[i+4:]
+	}
 	host, _, parseErr := net.SplitHostPort(hostPort)
 	if parseErr != nil {
 		return nil, fmt.Errorf("unable to parse hostport properly: %+v", parseErr)
