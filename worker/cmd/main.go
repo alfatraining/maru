@@ -54,7 +54,7 @@ import (
 )
 
 func main() {
-	logger, err := zap.NewDevelopment()
+	logger, err := zap.NewProduction()
 	if err != nil {
 		panic(err)
 	}
@@ -283,6 +283,10 @@ func buildWorkerOptions(ctx context.Context, logger *zap.Logger) worker.Options 
 }
 
 func getTLSConfig(hostPort string, logger *zap.Logger) (*tls.Config, error) {
+	if i := strings.Index(hostPort, ":///"); i > 0 {
+		// remove everything from the beginning of the string until and including `:///``
+		hostPort = hostPort[i+4:]
+	}
 	host, _, parseErr := net.SplitHostPort(hostPort)
 	if parseErr != nil {
 		return nil, fmt.Errorf("unable to parse hostport properly: %+v", parseErr)
@@ -295,6 +299,7 @@ func getTLSConfig(hostPort string, logger *zap.Logger) (*tls.Config, error) {
 	clientCertFile := getEnvOrDefaultString(logger, "TLS_CLIENT_CERT_FILE", "")
 	clientCertPrivateKeyFile := getEnvOrDefaultString(logger, "TLS_CLIENT_CERT_PRIVATE_KEY_FILE", "")
 	enableHostVerification := getEnvOrDefaultBool(logger, "TLS_ENABLE_HOST_VERIFICATION", false)
+	serverName := getEnvOrDefaultString(logger, "TLS_SERVER_NAME", host)
 
 	caBytes, err := getTLSBytes(caCertFile, caCertData)
 	if err != nil {
@@ -333,7 +338,7 @@ func getTLSConfig(hostPort string, logger *zap.Logger) (*tls.Config, error) {
 	if caPool != nil || cert != nil {
 		tlsConfig := &tls.Config{
 			InsecureSkipVerify: !enableHostVerification,
-			ServerName:         host,
+			ServerName:         serverName,
 		}
 		if caPool != nil {
 			tlsConfig.RootCAs = caPool
